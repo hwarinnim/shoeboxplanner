@@ -1052,6 +1052,36 @@
                 saveHistory();
             });
 
+            // Prevent touch scrolling inside the room
+        document.addEventListener('touchmove', function (e) {
+            if (e.target.closest('#roomWrapper')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Prevent pinch-zoom gestures
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        document.addEventListener('gestureend', e => e.preventDefault());
+
+
+        // Disable double-tap to zoom on buttons
+        let tapTimeout;
+        let tapCount = 0;
+
+        document.addEventListener('touchend', function (event) {
+          tapCount++;
+
+          clearTimeout(tapTimeout);
+          tapTimeout = setTimeout(() => {
+            tapCount = 0;
+          }, 500); // 500ms window for detecting double-tap
+
+          if (tapCount > 1) {
+            event.preventDefault();
+          }
+        }, { passive: false });
+
             function goToOtherMode() {
                 window.location.href = 'mrlo-tidy-mode.html';
             }
