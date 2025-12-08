@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Oxygen+Mono&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" href="icons/icon192.png" type="image/png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Room Planner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+            background-color: #036d80;
+            /* teal */
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            color: #fff;
+        }
+
+        .sidebar {
+            width: 250px;
+            font-family: 'Oxygen Mono', serif;
+            background-color: #437436;
+            /* forest green */
+            padding: 20px;
+            border-right: 2px solid #e2b54e;
+            overflow-y: auto;
+            align-items: center;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #fffbe7;
+            align-items: center;
+            text-align: center;
+        }
+
+        .item-entry {
+            background: #ffffff;
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 18px;
+            cursor: move;
+            position: relative;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+
+        .item-entry.selected {
+            border: 2px solid #ee9217;
+            background-color: #ffe8c9;
+        }
+
+        .option-btn {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            background: #ccc;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .item-entry input {
+            font-size: 18px;
+            font-family: 'Oxygen Mono', serif;
+            
+            width: 100%;
+            
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .second-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+            font-size: 18px;
+        }
+
+        .second-row input {
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+            width: 50%;
+            margin-bottom: 0;
+        }
+
+        .dimension-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+            font-size: 18px;
+        }
+
+        .dimension-row input {
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+            width: 50%;
+            margin-bottom: 0;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .color-swatch {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            cursor: pointer;
+            border: 2px solid #999;
+            border-radius: 4px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+
+        .room-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .room-controls input {
+            width: 100px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+        }
+
+        .room-controls button,
+        .palette button {
+            background-color: #ee9217;
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .room-controls button:hover,
+        .palette button:hover {
+            background-color: #c65818;
+        }
+
+        #roomWrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+            height: 60vh;
+            overflow: hidden;
+            background-color: #fff;
+            background-image:
+                linear-gradient(to right, rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 2px solid #e2b54e;
+            border-radius: 8px;
+        }
+
+        #room {
+            transform-origin: center center;
+            position: relative;
+            background-color: #fff;
+            border: 2px dashed #036d80;
+            z-index: 10000;
+        }
+
+        .furniture {
+            position: absolute;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+            background-color: #a0c4ff;
+            border: 0px solid #fff;
+            user-select: none;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .spacer-left {
+            margin-left: 25px;
+        }
+
+        .palette {
+            margin-top: 20px;
+        }
+
+        .name-input {
+            display: flex;
+            height: 100%;
+            padding: 4px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 50%;
+            height: 100%;
+            margin-bottom: 4px;
+            font-size: 18px;
+        }
+
+        .input-row input {
+            flex: 1;
+            padding: 4px;
+            height: 100%;
+            font-family: 'Oxygen Mono', serif;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .unit-text {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .rotate-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 50%;
+            margin-bottom: 4px;
+            font-size: 18px;
+            
+            margin-top: 8px;
+            
+        }
+
+
+        .room-input {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 110px;
+            font-size: 18px;
+        }
+
+        .room-input input {
+            width: 80px;
+            padding: 4px;
+            font-size: 18px;
+            font-family: 'Oxygen Mono', serif;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .room-unit {
+            font-size: 18px;
+            color: #fff;
+        }
+
+        
+
+        .furniture.selected {
+            outline: 3px solid #ee9217;
+            outline-offset: 2px;
+            z-index: 9999;
+        }
+
+        #roomContainer {
+            transform-origin: center center;
+            transition: transform 0.1s ease;
+        }
+        
+        .title-link {
+            text-decoration: none;
+            color: inherit;                
+            cursor: pointer;
+        }
+
+.unit-toggle {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ee9217;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #e2b54e;
+}
+
+input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+.furniture.hidden {
+    display: none;
+}
+
+.item-entry.hidden {
+    opacity: 0.5;
+}
+
+
+
+        
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Items</h2>
+        <div id="itemList"></div>
+    </div>
+    <div class="main">
+
+        <h2 id="roomName" contenteditable="true" onkeydown="handleRoomNameKey(event)" onblur="saveRoomName()"
+            style="outline: none; display: inline-block;"><span style="font-family: Anonymous pro; font-weight: 100; font-size: 40px; margin-top: 0px;">
+            Enter Room Name</span></h2>
+
+        
+        <div class="room-controls">
+            <span>Unit</span>
+            <label class="switch">
+                <input type="checkbox" id="unitSwitch">
+                <span class="slider round"></span>
+            </label>
+            <span id="unitLabel" style="color: #036d80;">cm</span>
+            
+            <div class="room-input">
+                <input id="roomWidth" type="number" value="600" />
+                <span class="unit">cm</span>
+
+            </div>
+
+            <div class="room-input">
+                <input id="roomHeight" type="number" value="400" />
+                <span class="unit">cm</span>
+
+            </div>
+
+            <button onclick="resizeRoom()">Set Room Size</button>
+            <button onclick="saveToLocalStorage()" class="spacer-left" style="background-color: #c65818;">Save Room</button>
+            <button onclick="exportAsImage()" style="background-color: #c65818;">Export</button>
+
+        </div>
+        <div id="roomWrapper">
+            <div id="roomContainer">
+                <div id="room"></div>
+            </div>
+        </div>
+        <div class="palette">
+            <button onclick="undo()">Undo</button>
+            <button onclick="redo()">Redo</button>
+            <button onclick="addFurniture('square')" class="spacer-left">Add Square</button>
+            <button onclick="addFurniture('circle')">Add Circle</button>
+            <button onclick="clearRoom()" class="spacer-left">Clear</button>
+            <button onclick="resetRoom()">Reset</button>
+            
+        </div>
+        <div style="text-align: center; font-size: 16px; color: #fff; margin-top: 40px; margin-bottom: 0px;">
+            <a href="#" onclick="goToHome()" onmouseover="this.style.textDecoration='underline'"
+                onmouseout="this.style.textDecoration='none'" style="color: #fff; text-decoration: none; cursor: pointer;">
+                ← Back to Home</a>
+            
+            <a href="#" onclick="toggleAbout()" onmouseover="this.style.textDecoration='underline'"
+                onmouseout="this.style.textDecoration='none'"
+                style="color: #fff; text-decoration: none; cursor: pointer;">
+                <span class="spacer-left">Need help?</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let room = document.getElementById('room');
+        let itemList = document.getElementById('itemList');
+        let itemCount = { square: 0, circle: 0 };
+        let furnitureMap = {};
+        let scale = 1;
+        let zoomLevel = 1;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let startPan = { x: 0, y: 0 };
+        let roomWidthCm = 600;
+        let roomHeightCm = 400;
+        let history = [];
+        let historyIndex = -1;
+        let isRestoring = false;
+
+
+        function goToHome() {
+                window.location.href = 'index.html';
+            }
+
+        const colorOptions = [
+            { name: 'Orange', value: '#ee9217' },
+            { name: 'Brick Red', value: '#c65818' },
+            { name: 'Mustard', value: '#e2b54e' },
+            { name: 'Forest Green', value: '#437436' },
+            { name: 'Teal', value: '#036d80' }
+        ];
+
+        function getRandomColor() {
+            return colorOptions[Math.floor(Math.random() * colorOptions.length)].value;
+        }
+
+        function resizeRoom() {
+            roomWidthCm = parseInt(document.getElementById('roomWidth').value);
+            roomHeightCm = parseInt(document.getElementById('roomHeight').value);
+            if (roomWidthCm && roomHeightCm) {
+                scale = 1;
+                room.style.width = roomWidthCm + 'px';
+                room.style.height = roomHeightCm + 'px';
+
+            }
+
+            fitToCanvas();
+        }
+
+        function fitToCanvas() {
+            const wrapper = document.getElementById('roomWrapper');
+            const maxWidth = wrapper.clientWidth - 20;
+            const maxHeight = wrapper.clientHeight - 20;
+            const zoomX = maxWidth / roomWidthCm;
+            const zoomY = maxHeight / roomHeightCm;
+            zoomLevel = Math.min(zoomX, zoomY);
+
+            panX = 0;
+            panY = 0;
+
+            const roomContainer = document.getElementById('roomContainer');
+            roomContainer.style.transform = `scale(${zoomLevel})`;
+
+        }
+
+
+        function addFurniture(type, name = null, width = 80, height = 80, color = null, x = 10, y = 10, fontSize = 18, rotation = 0) {
+            const count = ++itemCount[type];
+            const label = name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${count}`;
+            const id = label + '-' + Date.now();
+
+            let el = document.createElement('div');
+            el.className = 'furniture';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.dataset.type = type;
+            el.dataset.name = label;
+            el.dataset.id = id;
+            el.dataset.width = width;
+            el.dataset.height = height;
+            el.style.width = width + 'px';
+            el.style.height = height + 'px';
+            el.dataset.rotation = rotation;
+            el.style.transform = `rotate(${rotation}deg)`;
+            el.style.borderRadius = type === 'circle' ? '50%' : '0';
+            el.textContent = label;
+            el.dataset.fontSize = fontSize;
+            el.style.fontSize = fontSize + 'px';
+            el.dataset.color = color;
+            el.style.backgroundColor = color || getRandomColor();
+            // Always place new items above everything else
+            el.style.zIndex = 5000; // safely below room border's 10000
+            updateZIndices();
+
+
+            furnitureMap[id] = el;
+            makeDraggable(el);
+            el.addEventListener('click', () => highlightSidebarItem(id));
+            room.appendChild(el);
+            addToSidebar(el);
+
+
+            saveHistory();
+            return el;
+
+
+        }
+
+        function clearRoom() {
+            room.innerHTML = '';
+            itemList.innerHTML = '';
+            furnitureMap = {};
+            itemCount = { square: 0, circle: 0 };
+            saveHistory();
+
+        }
+
+        function resetRoom() {
+            clearRoom();
+            resizeRoom();
+            fitToCanvas();
+
+            // Save counter state (both zero after clearRoom)
+            let savedCounts = { ...itemCount };
+
+            // Add starter items WITHOUT counting
+            addFurniture('square', 'Bed', 200, 90, null, 0, 0);
+            addFurniture('square', 'Desk', 120, 75, null, roomWidthCm - 120 - 3, 0);
+            addFurniture('circle', 'Rug', 200, 200, null, roomWidthCm / 2 - 100, roomHeightCm / 2 - 100);
+            addFurniture('square', 'Closet', 150, 80, null, 0, roomHeightCm - 80 - 3);
+
+            // Restore counters so new items begin at 1
+            itemCount = savedCounts;
+
+            saveHistory();
+
+        }
+
+        function deleteItem(el, entry) {
+            room.removeChild(el);
+            itemList.removeChild(entry);
+            delete furnitureMap[el.dataset.id];
+        }
+
+        function updateFurnitureSize(el, w, h) {
+            el.dataset.width = w;
+            el.dataset.height = h;
+            el.style.width = w + 'px';
+            el.style.height = h + 'px';
+            saveHistory();
+
+        }
+
+        function addToSidebar(el) {
+            const id = el.dataset.id;
+            let entry = document.createElement('div');
+            entry.className = 'item-entry';
+            entry.addEventListener('click', () => highlightSidebarItem(id));
+            entry.draggable = true;
+            entry.dataset.id = id;
+
+            // Option button container
+            const optionWrap = document.createElement('div');
+            optionWrap.style.position = 'absolute';
+            optionWrap.style.top = '4px';
+            optionWrap.style.right = '4px';
+
+            const optionBtn = document.createElement('button');
+            optionBtn.className = 'option-btn';
+            optionBtn.textContent = '⋮';
+
+            // Menu
+            const optionMenu = document.createElement('div');
+            optionMenu.style.display = 'none';
+            optionMenu.style.position = 'absolute';
+            optionMenu.style.top = '24px';
+            optionMenu.style.right = '0';
+            optionMenu.style.background = '#eee';
+            optionMenu.style.border = '1px solid #ccc';
+            optionMenu.style.borderRadius = '4px';
+            optionMenu.style.zIndex = '1000';
+
+            optionMenu.innerHTML = `
+    <div class="menu-option" style="padding: 4px 8px; cursor: pointer;">Hide</div>
+    <div class="menu-option" style="padding: 4px 8px; cursor: pointer;">Delete</div>
+`;
+
+            optionWrap.appendChild(optionBtn);
+            optionWrap.appendChild(optionMenu);
+            entry.appendChild(optionWrap);
+
+            // Toggle menu
+            optionBtn.onclick = (e) => {
+                e.stopPropagation();
+                optionMenu.style.display = optionMenu.style.display === 'block' ? 'none' : 'block';
+            };
+
+            // Close menu on outside click
+            document.addEventListener('click', () => {
+                optionMenu.style.display = 'none';
+            });
+
+            // Option actions
+            const [hideOption, deleteOption] = optionMenu.querySelectorAll('.menu-option');
+
+            hideOption.onclick = () => {
+                toggleItemVisibility(el, entry, hideOption);
+                optionMenu.style.display = 'none';
+            };
+
+            deleteOption.onclick = () => {
+                deleteItem(el, entry);
+                optionMenu.style.display = 'none';
+            };
+
+
+            let nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = el.dataset.name;
+            nameInput.placeholder = 'Item name';
+            nameInput.className = 'name-input';
+            nameInput.addEventListener('focus', () => nameInput.select());
+            nameInput.addEventListener('input', () => {
+                el.dataset.name = nameInput.value;
+                el.textContent = nameInput.value;
+            });
+
+            // Font Size input (on its own line, below name input)
+            let fontWrap = document.createElement('div');
+            fontWrap.style.display = 'flex';
+            fontWrap.style.alignItems = 'center';
+            fontWrap.style.gap = '4px';
+            fontWrap.style.marginTop = '4px';
+
+            let fontSizeInput = document.createElement('input');
+            fontSizeInput.type = 'number';
+            fontSizeInput.value = el.dataset.fontSize || '18';
+            fontSizeInput.dispatchEvent(new Event('input'));
+            fontSizeInput.min = 7;
+            fontSizeInput.max = 50;
+
+            fontSizeInput.style.flex = '1';
+            fontSizeInput.style.padding = '4px';
+            fontSizeInput.style.fontSize = '18px';
+            fontSizeInput.style.fontFamily = "'Oxygen Mono', monospace";
+            fontSizeInput.style.border = '1px solid #ccc';
+            fontSizeInput.style.borderRadius = '4px';
+
+            fontSizeInput.addEventListener('input', () => {
+                let size = Math.max(7, Math.min(50, parseInt(fontSizeInput.value)));
+                el.dataset.fontSize = size;
+                el.style.fontSize = size + 'px';
+            });
+
+            let fontUnit = document.createElement('span');
+            fontUnit.className = 'unit-text';
+            fontUnit.textContent = 'px';
+
+            fontWrap.appendChild(fontSizeInput);
+            fontWrap.appendChild(fontUnit);
+            entry.appendChild(fontWrap);
+
+            let rotateWrap = document.createElement('div');
+            rotateWrap.className = 'input-row rotate-row';
+
+            let rotateInput = document.createElement('input');
+            rotateInput.type = 'number';
+            rotateInput.value = el.dataset.rotation;
+            rotateInput.dispatchEvent(new Event('input'));
+
+            rotateInput.addEventListener('input', () => {
+                const angle = parseInt(rotateInput.value) || 0;
+                el.dataset.rotation = angle;
+                el.style.transform = `rotate(${angle}deg)`;
+                saveHistory();
+            });
+
+            let rotateUnit = document.createElement('span');
+            rotateUnit.className = 'unit-text';
+            rotateUnit.textContent = '°';
+
+            rotateWrap.appendChild(rotateInput);
+            rotateWrap.appendChild(rotateUnit);
+
+            let secondRow = document.createElement('div');
+            secondRow.className = 'second-row';
+
+            secondRow.appendChild(fontWrap);
+            secondRow.appendChild(rotateWrap);
+
+            let dimensionRow = document.createElement('div');
+            dimensionRow.className = 'dimension-row';
+
+            // Width container
+            let widthWrap = document.createElement('div');
+            widthWrap.className = 'input-row';
+
+            let widthInput = document.createElement('input');
+            widthInput.type = 'number';
+            widthInput.value = el.dataset.width;
+            widthInput.addEventListener('focus', () => widthInput.select());
+            widthInput.addEventListener('input', () => {
+                updateFurnitureSize(el, parseInt(widthInput.value), parseInt(heightInput.value));
+            });
+
+            let widthUnit = document.createElement('span');
+            widthUnit.className = 'unit-text';
+            widthUnit.textContent = 'W';
+
+            widthWrap.appendChild(widthInput);
+            widthWrap.appendChild(widthUnit);
+
+            // Height container
+            let heightWrap = document.createElement('div');
+            heightWrap.className = 'input-row';
+
+            let heightInput = document.createElement('input');
+            heightInput.type = 'number';
+            heightInput.value = el.dataset.height;
+            heightInput.addEventListener('focus', () => heightInput.select());
+            heightInput.addEventListener('input', () => {
+                updateFurnitureSize(el, parseInt(widthInput.value), parseInt(heightInput.value));
+            });
+
+            let heightUnit = document.createElement('span');
+            heightUnit.className = 'unit-text';
+            heightUnit.textContent = 'H';
+
+            heightWrap.appendChild(heightInput);
+            heightWrap.appendChild(heightUnit);
+
+            // Add both to the row
+            dimensionRow.appendChild(widthWrap);
+            dimensionRow.appendChild(heightWrap);
+
+
+            let colorGrid = document.createElement('div');
+            colorGrid.className = 'color-grid';
+            colorOptions.forEach(opt => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = opt.value;
+                swatch.title = opt.name;
+                swatch.onclick = () => {
+                    el.style.backgroundColor = opt.value;
+                    el.dataset.color = opt.value;
+                };
+                colorGrid.appendChild(swatch);
+            });
+
+
+            entry.appendChild(nameInput);     // ⬅️ Name first
+            entry.appendChild(secondRow);      
+            entry.appendChild(dimensionRow);  // ⬅️ Then width/height
+            entry.appendChild(colorGrid);     // ⬅️ Then colors
+            
+            itemList.appendChild(entry);
+            updateZIndices();
+        }
+
+        function toggleItemVisibility(el, entry, menuItem) {
+                const isHidden = el.style.display === 'none';
+
+                if (isHidden) {
+                    el.style.display = 'flex';
+                    entry.style.opacity = '1';
+                    menuItem.textContent = 'Hide';
+                } else {
+                    el.style.display = 'none';
+                    entry.style.opacity = '0.5';
+                    menuItem.textContent = 'Unhide';
+                }
+
+                saveHistory();
+            }
+
+            let draggedEntry = null;
+
+                itemList.addEventListener('dragstart', (e) => {
+                    draggedEntry = e.target.closest('.item-entry');
+                    if (draggedEntry) {
+                        e.dataTransfer.effectAllowed = 'move';
+                    }
+                });
+
+                itemList.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const target = e.target.closest('.item-entry');
+                    if (!draggedEntry || !target || draggedEntry === target) return;
+
+                    const bounding = target.getBoundingClientRect();
+                    const offset = bounding.y + (bounding.height / 2);
+
+                    if (e.clientY - offset > 0) {
+                        target.after(draggedEntry);
+                    } else {
+                        target.before(draggedEntry);
+                    }
+                });
+
+                itemList.addEventListener('drop', () => {
+                    draggedEntry = null;
+                    updateZIndices(); // 🧠 updates furniture stacking after rearrange
+                });
+
+
+        function highlightSidebarItem(id) {
+            // Deselect all item entries
+            const allEntries = itemList.querySelectorAll('.item-entry');
+            allEntries.forEach(entry => entry.classList.remove('selected'));
+
+            // Deselect all furniture
+            Object.values(furnitureMap).forEach(el => el.classList.remove('selected'));
+
+            // Highlight matching entry
+            const entry = itemList.querySelector(`[data-id='${id}']`);
+            if (entry) {
+                entry.classList.add('selected');
+                entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+
+            // Highlight and (soft) center furniture
+            const el = furnitureMap[id];
+            if (el) {
+                el.classList.add('selected');
+
+                if (zoomLevel > 1) {
+                    const wrapper = document.getElementById('roomWrapper');
+                    const wrapperWidth = wrapper.clientWidth;
+                    const wrapperHeight = wrapper.clientHeight;
+
+                    const elX = parseFloat(el.style.left);
+                    const elY = parseFloat(el.style.top);
+                    const elW = parseFloat(el.dataset.width);
+                    const elH = parseFloat(el.dataset.height);
+
+                    const elCenterX = elX + elW / 2;
+                    const elCenterY = elY + elH / 2;
+
+                    const centerX = wrapperWidth / 2;
+                    const centerY = wrapperHeight / 2;
+
+                    panX = (centerX / zoomLevel) - elCenterX;
+                    panY = (centerY / zoomLevel) - elCenterY;
+
+
+                }
+
+            }
+        }
+
+
+
+        function updateZIndices() {
+            const entries = Array.from(itemList.children);
+
+            // Assign base z-index based on sidebar order
+            entries.forEach((entry, index) => {
+                const id = entry.dataset.id;
+                const el = furnitureMap[id];
+                if (el) el.style.zIndex = 100 + (entries.length - index);
+            });
+        }
+
+        function makeDraggable(el) {
+            el.onmousedown = function (e) {
+                let offsetX = e.clientX - el.getBoundingClientRect().left;
+                let offsetY = e.clientY - el.getBoundingClientRect().top;
+
+                function moveAt(e) {
+                    const roomRect = room.getBoundingClientRect();
+
+                    // Convert mouse to room-space
+                    const mouseX = (e.clientX - roomRect.left) / zoomLevel;
+                    const mouseY = (e.clientY - roomRect.top) / zoomLevel;
+
+                    let newLeft = mouseX - offsetX / zoomLevel;
+                    let newTop = mouseY - offsetY / zoomLevel;
+
+                    const angle = (parseFloat(el.dataset.rotation) || 0) * Math.PI / 180;
+
+                    const w = el.offsetWidth;
+                    const h = el.offsetHeight;
+
+                    const cx = newLeft + w / 2;
+                    const cy = newTop + h / 2;
+
+                    const corners = [
+                        [-w / 2, -h / 2],
+                        [w / 2, -h / 2],
+                        [w / 2, h / 2],
+                        [-w / 2, h / 2]
+                    ].map(([x, y]) => {
+                        const rx = x * Math.cos(angle) - y * Math.sin(angle);
+                        const ry = x * Math.sin(angle) + y * Math.cos(angle);
+                        return [cx + rx, cy + ry];
+                    });
+
+                    const xs = corners.map(c => c[0]);
+                    const ys = corners.map(c => c[1]);
+
+                    const minX = Math.min(...xs);
+                    const maxX = Math.max(...xs);
+                    const minY = Math.min(...ys);
+                    const maxY = Math.max(...ys);
+
+                    const border = 2;
+                    const buffer = 2;
+
+                    let dx = 0, dy = 0;
+
+                    if (minX < 0) dx = -minX;
+                    if (maxX > roomWidthCm - border - buffer) dx = (roomWidthCm - border - buffer) - maxX;
+                    if (minY < 0) dy = -minY;
+                    if (maxY > roomHeightCm - border - buffer) dy = (roomHeightCm - border - buffer) - maxY;
+
+                    const finalCx = cx + dx;
+                    const finalCy = cy + dy;
+                    const finalLeft = finalCx - w / 2;
+                    const finalTop = finalCy - h / 2;
+
+                    el.style.left = finalLeft + 'px';
+                    el.style.top = finalTop + 'px';
+                    el.style.transform = `rotate(${el.dataset.rotation}deg)`;
+                }
+
+
+                function stopDrag() {
+                    document.removeEventListener('mousemove', moveAt);
+                    document.removeEventListener('mouseup', stopDrag);
+
+                    el.style.left = el.offsetLeft + 'px';
+                    el.style.top = el.offsetTop + 'px';
+
+                    saveHistory();
+
+                }
+
+                document.addEventListener('mousemove', moveAt);
+                document.addEventListener('mouseup', stopDrag);
+            };
+
+            // TOUCH SUPPORT
+            el.ontouchstart = function (e) {
+                const touch = e.touches[0];
+                let offsetX = touch.clientX - el.getBoundingClientRect().left;
+                let offsetY = touch.clientY - el.getBoundingClientRect().top;
+
+                function moveAt(t) {
+                    const touchMove = t.touches[0];
+                    const roomRect = room.getBoundingClientRect();
+
+                    const mouseX = (touchMove.clientX - roomRect.left) / zoomLevel;
+                    const mouseY = (touchMove.clientY - roomRect.top) / zoomLevel;
+
+                    let newLeft = mouseX - offsetX / zoomLevel;
+                    let newTop = mouseY - offsetY / zoomLevel;
+
+                    const angle = (parseFloat(el.dataset.rotation) || 0) * Math.PI / 180;
+                    const w = el.offsetWidth;
+                    const h = el.offsetHeight;
+                    const cx = newLeft + w / 2;
+                    const cy = newTop + h / 2;
+
+                    let minX, maxX, minY, maxY;
+                    const isOval = el.dataset.type === 'circle' && w !== h && angle !== 0;
+                
+                    if (isOval) {
+                        const rx = w / 2;
+                        const ry = h / 2;
+                        const cos = Math.cos(angle);
+                        const sin = Math.sin(angle);
+                
+                        const aabbW = 2 * Math.sqrt((rx * cos) ** 2 + (ry * sin) ** 2);
+                        const aabbH = 2 * Math.sqrt((rx * sin) ** 2 + (ry * cos) ** 2);
+                
+                        minX = cx - aabbW / 2;
+                        maxX = cx + aabbW / 2;
+                        minY = cy - aabbH / 2;
+                        maxY = cy + aabbH / 2;
+                    } else {
+                        const corners = [
+                            [-w / 2, -h / 2],
+                            [w / 2, -h / 2],
+                            [w / 2, h / 2],
+                            [-w / 2, h / 2]
+                        ].map(([x, y]) => {
+                            const rx = x * Math.cos(angle) - y * Math.sin(angle);
+                            const ry = x * Math.sin(angle) + y * Math.cos(angle);
+                            return [cx + rx, cy + ry];
+                        });
+
+                        const xs = corners.map(c => c[0]);
+                        const ys = corners.map(c => c[1]);
+                
+                        minX = Math.min(...xs);
+                        maxX = Math.max(...xs);
+                        minY = Math.min(...ys);
+                        maxY = Math.max(...ys);
+                    }
+                
+                    const buffer = 4;
+                    let dx = 0, dy = 0;
+                
+                    if (minX < 0) dx = -minX;
+                    if (maxX > roomWidthCm - buffer) dx = (roomWidthCm - buffer) - maxX;
+                    if (minY < 0) dy = -minY;
+                    if (maxY > roomHeightCm - buffer) dy = (roomHeightCm - buffer) - maxY;
+
+                    const finalCx = cx + dx;
+                    const finalCy = cy + dy;
+                    const finalLeft = finalCx - w / 2;
+                    const finalTop = finalCy - h / 2;
+                
+                    el.style.left = finalLeft + 'px';
+                    el.style.top = finalTop + 'px';
+                    el.style.transform = `rotate(${el.dataset.rotation}deg)`;
+                }
+
+
+                function stopTouch() {
+                    document.removeEventListener('touchmove', moveAt);
+                    document.removeEventListener('touchend', stopTouch);
+                    saveHistory();
+                }
+
+                document.addEventListener('touchmove', moveAt, { passive: false });
+                document.addEventListener('touchend', stopTouch, { passive: false });
+            };
+
+
+
+        }
+
+        function saveHistory() {
+            if (isRestoring) return;
+
+            // Remove future states if we just undid something
+            history = history.slice(0, historyIndex + 1);
+
+            // Capture the state
+            const state = {
+                roomName: document.getElementById('roomName').innerText.trim(),
+                roomWidth: roomWidthCm,
+                roomHeight: roomHeightCm,
+                items: Object.values(furnitureMap).map(el => ({
+                    id: el.dataset.id,
+                    type: el.dataset.type,
+                    name: el.dataset.name,
+                    fontSize: parseFloat(el.dataset.fontSize || 14),
+                    width: parseInt(el.dataset.width),
+                    height: parseInt(el.dataset.height),
+                    color: el.style.backgroundColor,
+                    x: parseInt(el.style.left),
+                    y: parseInt(el.style.top),
+                    rotation: parseInt(el.dataset.rotation)
+
+                }))
+            };
+
+            history.push(state);
+            historyIndex++;
+        }
+
+        function loadState(state) {
+                isRestoring = true;
+                clearRoom();
+
+                // 1. Room Name
+            document.getElementById('roomName').innerHTML = `<span style="font-family: Anonymous Pro; font-weight: 100; font-size: 40px; margin-top: 0px;">${state.roomName || 'Enter Room Name'}</span>`;
+
+                // 2. Room Size
+                roomWidthCm = state.roomWidth;
+                roomHeightCm = state.roomHeight;
+                document.getElementById('roomWidth').value = state.roomWidth;
+                document.getElementById('roomHeight').value = state.roomHeight;
+
+                room.style.width = roomWidthCm + 'px';
+                room.style.height = roomHeightCm + 'px';
+
+                // 3. Unit
+                if (state.unit === "in") {
+                    document.getElementById("unitSwitch").checked = true;
+                    document.getElementById("unitLabel").textContent = "in";
+                    document.querySelectorAll(".unit").forEach(el => el.textContent = "in");
+                } else {
+                    document.getElementById("unitSwitch").checked = false;
+                    document.getElementById("unitLabel").textContent = "cm";
+                    document.querySelectorAll(".unit").forEach(el => el.textContent = "cm");
+                }
+
+                // 4. Furniture – in saved sidebar order
+                state.items.forEach(item => {
+                    const newEl = addFurniture(
+                        item.type,
+                        item.name,
+                        item.width,
+                        item.height,
+                        item.color,
+                        item.x,
+                        item.y,
+                        item.fontSize || 18,
+                        item.rotation || 0
+                    );
+
+                    // Set rotation
+                    newEl.dataset.rotation = item.rotation;
+                    newEl.style.transform = `rotate(${item.rotation}deg)`;
+
+                    // Set font size
+                    const fontSize = item.fontSize || 18;
+                    newEl.dataset.fontSize = fontSize;
+                    newEl.style.fontSize = fontSize + 'px';
+
+                    // ✅ Explicitly restore size
+                    newEl.dataset.width = item.width;
+                    newEl.dataset.height = item.height;
+                    newEl.style.width = item.width + 'px';
+                    newEl.style.height = item.height + 'px';
+
+                    // ✅ Also manually update the sidebar inputs to match
+                    const entry = itemList.querySelector(`[data-id='${item.id}']`);
+                    if (entry) {
+                        const inputs = entry.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            if (input.placeholder === 'Item name') return;
+
+                            const unitSpan = input.nextSibling?.textContent?.trim();
+
+
+                            if (input.nextSibling && input.nextSibling.textContent === 'W') {
+                                input.value = item.width;
+                            } else if (input.nextSibling && input.nextSibling.textContent === 'H') {
+                                input.value = item.height;
+                            } else if (input.nextSibling && input.nextSibling.textContent === '°') {
+                                input.value = item.rotation;
+                                input.dispatchEvent(new Event('input'));
+                            } else if (input.nextSibling && input.nextSibling.textContent === 'px') {
+                                input.value = fontSize;
+                                input.dispatchEvent(new Event('input'));
+
+                            }
+                        });
+                    }
+
+                });
+
+                updateZIndices(); // Make sure layers match sidebar order
+                fitToCanvas();
+                isRestoring = false;
+            }
+
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                loadState(history[historyIndex]);
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                loadState(history[historyIndex]);
+            }
+        }
+
+        function exportToHtml() {
+            // Lock in positions visually
+            Object.values(furnitureMap).forEach(el => {
+                el.style.left = el.offsetLeft + 'px';
+                el.style.top = el.offsetTop + 'px';
+            });
+
+            const state = {
+                roomName: document.getElementById('roomName').innerText.trim(),
+                roomWidth: roomWidthCm,
+                roomHeight: roomHeightCm,
+                items: Object.values(furnitureMap).map(el => ({
+                    id: el.dataset.id,
+                    type: el.dataset.type,
+                    name: el.dataset.name,
+                    fontSize: parseFloat(el.dataset.fontSize || 14),
+                    width: parseFloat(el.style.width),
+                    height: parseFloat(el.style.height),
+                    color: el.style.backgroundColor,
+                    x: parseFloat(el.style.left),
+                    y: parseFloat(el.style.top),
+                    rotation: parseFloat(el.dataset.rotation || 0)
+                }))
+            };
+
+            // Clone current document
+            const clone = document.documentElement.cloneNode(true);
+            const script = clone.querySelector('script');
+
+            // Create a new script tag with the saved layout
+            const saved = document.createElement('script');
+            saved.textContent = `const savedLayout = ${JSON.stringify(state)};\nwindow.onload = () => { loadState(savedLayout); };`;
+
+            // Inject right after the original script
+            script.parentNode.insertBefore(saved, script.nextSibling);
+
+            // Build final HTML
+            const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+
+            // Download
+            const blob = new Blob([finalHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my-room-layout.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function saveToLocalStorage() {
+                const name = document.getElementById('roomName').innerText.trim() || `Room ${Date.now()}`;
+                const roomId = Date.now().toString();
+                const unitType = document.getElementById('unitLabel').textContent.trim(); // "cm" or "in"
+
+                const entries = Array.from(itemList.children); // Sidebar order
+                const items = entries.map(entry => {
+                    const id = entry.dataset.id;
+                    const el = furnitureMap[id];
+                    return {
+                        id: id,
+                        type: el.dataset.type,
+                        name: el.dataset.name,
+                        fontSize: parseFloat(el.dataset.fontSize || 18),
+                        width: parseFloat(el.style.width),
+                        height: parseFloat(el.style.height),
+                        color: el.style.backgroundColor,
+                        x: parseFloat(el.style.left),
+                        y: parseFloat(el.style.top),
+                        rotation: parseFloat(el.dataset.rotation || 0)
+                    };
+                });
+
+                const state = {
+                    roomId,
+                    roomName: name,
+                    roomWidth: roomWidthCm,
+                    roomHeight: roomHeightCm,
+                    unit: unitType,
+                    timestamp: new Date().toISOString(),
+                    items: items
+                };
+
+                localStorage.setItem(`room_${roomId}`, JSON.stringify(state));
+
+                let savedRooms = JSON.parse(localStorage.getItem('savedRooms') || '[]');
+                savedRooms.push({ id: roomId, name, date: state.timestamp });
+                localStorage.setItem('savedRooms', JSON.stringify(savedRooms));
+
+                alert(`Room "${name}" saved to app.`);
+            }
+
+
+
+
+
+
+        window.onload = () => {
+                const params = new URLSearchParams(window.location.search);
+                const roomId = params.get('room');
+
+                if (roomId) {
+                    const saved = JSON.parse(localStorage.getItem(`room_${roomId}`));
+                    if (saved) {
+                        loadState(saved);
+                    } else {
+                        alert("Saved room not found.");
+                        resetRoom();
+                    }
+                } else if (typeof savedLayout !== 'undefined') {
+                    loadState(savedLayout);
+                } else {
+                    resetRoom();
+                }
+
+                fitToCanvas();
+            };
+
+
+        document.addEventListener('click', (e) => {
+            // Check if the click target is INSIDE furniture or sidebar item
+            const isFurniture = e.target.closest('.furniture');
+            const isSidebarEntry = e.target.closest('.item-entry');
+
+            if (!isFurniture && !isSidebarEntry) {
+                // Deselect all sidebar items
+                const allEntries = itemList.querySelectorAll('.item-entry');
+                allEntries.forEach(entry => entry.classList.remove('selected'));
+
+                // Deselect all furniture
+                Object.values(furnitureMap).forEach(el => el.classList.remove('selected'));
+            }
+        });
+
+        const roomContainer = document.getElementById('roomContainer');
+
+        roomWrapper.addEventListener('mousedown', (e) => {
+            if (zoomLevel <= 1) return; // Don't pan if not zoomed
+            isPanning = true;
+            startPan.x = e.clientX;
+            startPan.y = e.clientY;
+            roomWrapper.style.cursor = 'grab';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            const dx = (e.clientX - startPan.x) / zoomLevel;
+            const dy = (e.clientY - startPan.y) / zoomLevel;
+            panX += dx;
+            panY += dy;
+            startPan.x = e.clientX;
+            startPan.y = e.clientY;
+
+        });
+
+        document.addEventListener('mouseup', () => {
+            isPanning = false;
+            roomWrapper.style.cursor = 'default';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const selected = room.querySelector('.furniture.selected');
+            if (!selected) return;
+
+            const step = 1;
+            let left = parseFloat(selected.style.left);
+            let top = parseFloat(selected.style.top);
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                    left -= step;
+                    break;
+                case 'ArrowRight':
+                    left += step;
+                    break;
+                case 'ArrowUp':
+                    top -= step;
+                    break;
+                case 'ArrowDown':
+                    top += step;
+                    break;
+                default:
+                    return;
+            }
+
+            // Clamp to room bounds with -4 buffer
+            const buffer = 4;
+            const maxLeft = roomWidthCm - selected.offsetWidth - buffer;
+            const maxTop = roomHeightCm - selected.offsetHeight - buffer;
+
+            left = Math.max(0, Math.min(left, maxLeft));
+            top = Math.max(0, Math.min(top, maxTop));
+
+            selected.style.left = left + 'px';
+            selected.style.top = top + 'px';
+            selected.style.transform = `rotate(${selected.dataset.rotation}deg)`;
+
+            saveHistory();
+        });
+
+        function goToOtherMode() {
+            window.location.href = 'tidy-ipad.html';
+        }
+
+        // Prevent touch scrolling inside the room
+        document.addEventListener('touchmove', function (e) {
+            if (e.target.closest('#roomWrapper')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Prevent pinch-zoom gestures
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        document.addEventListener('gestureend', e => e.preventDefault());
+
+
+        // Disable double-tap to zoom on buttons
+        let tapTimeout;
+        let tapCount = 0;
+
+        document.addEventListener('touchend', function (event) {
+          tapCount++;
+
+          clearTimeout(tapTimeout);
+          tapTimeout = setTimeout(() => {
+            tapCount = 0;
+          }, 500); // 500ms window for detecting double-tap
+
+          if (tapCount > 1) {
+            event.preventDefault();
+          }
+        }, { passive: false });
+
+        function toggleAbout() {
+            const box = document.getElementById('aboutBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.getElementById("unitSwitch").addEventListener("change", function () {
+                const isInches = this.checked;
+                const unitLabel = document.getElementById("unitLabel");
+                unitLabel.textContent = isInches ? "in" : "cm";
+
+                // Change any visible labels from cm to in or back
+                document.querySelectorAll(".unit").forEach(el => {
+                    el.textContent = isInches ? "in" : "cm";
+                });
+            });
+
+
+        function handleRoomNameKey(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('roomName').blur(); // triggers onblur to save
+                }
+            }
+
+            function saveRoomName() {
+                const name = document.getElementById('roomName').innerText.trim();
+                if (name === '') {
+                    document.getElementById('roomName').innerText = 'Enter Room Name';
+                }
+            }
+
+        function exportAsImage() {
+                const roomArea = document.getElementById('roomWrapper'); // Or 'roomContainer' if you prefer tighter crop
+
+                html2canvas(roomArea, {
+                    backgroundColor: "#ffffff", // export with white bg
+                    scale: 2 // higher quality
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'room-layout.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            }
+
+
+
+
+
+    </script>
+
+    <div id="aboutBox"
+        style="display: none; position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background-color: #fffbe7; color: #333; padding: 16px 20px; border: 2px solid #e2b54e; border-radius: 8px; width: 80%; max-width: 500px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 16px; font-family: 'Oxygen Mono', monospace; z-index: 9999;">
+        <p style="margin-top: 0; margin-bottom: 8px;">
+            How to Use Shoebox Planner:<br><br>
+            1. Set your room size.<br>
+            Enter your room's width and height to create the space.
+            Use the unit toggle to choose between cm or in.<br><br>
+            2. Add your furniture.<br>
+            Use squares/rectangles for most items and circles/ovals for round ones.<br><br>
+            3. Adjust if needed.<br>
+            Rotate items to fit how they really sit in your space.
+            Adjust font size to fit the size of your item.<br><br>
+            4. Arrange your layout.<br>
+            Drag items into place and rearrange item layers.
+            Hide or delete items as needed.<br><br>
+            5. Undo / Redo / Reset / Clear.<br>
+            Fix mistakes or start fresh anytime.<br><br>
+            6. Save your layout.<br>
+            Keep a copy of your plan for later or export it as an image file.
+            <br>
+        </p>
+        <div style="text-align: right;"> <button onclick="toggleAbout()"
+                style="font-family: 'Oxygen Mono', serif; background-color: #ee9217; color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 16px; cursor: pointer; align-items: center;">
+                Close</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    
+</body>
+
+</html>

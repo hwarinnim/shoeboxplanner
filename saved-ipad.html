@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Saved Rooms</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Oxygen+Mono&display=swap" rel="stylesheet">
+    <link rel="icon" href="icons/icon192.png" type="image/png">
+    <style>
+        body {
+            margin: 0;
+            background-color: #036d80;
+            /* sidebar green */
+            font-family: 'Oxygen Mono', monospace;
+            color: #fff;
+            font-weight: 100;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #437436;
+            padding: 20px;
+            border: 2px solid #e2b54e;
+            border-radius: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fffbe7;
+            font-size: 28px;
+            margin-bottom: 30px;
+        }
+
+        .room-card {
+            background: #fff;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background 0.2s ease;
+            color: #333;
+        }
+
+        .room-card:hover {
+            background: #ffe8c9;
+        }
+
+        .room-name {
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: #c65818;
+        }
+
+        .room-meta {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            color: #fffbe7;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .delete-btn:hover {
+  color: #ee9217;
+}
+
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Saved Rooms</h1>
+        <div id="roomList"></div>
+        <a href="index.html" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        const roomList = document.getElementById('roomList');
+        const savedRooms = JSON.parse(localStorage.getItem('savedRooms') || '[]');
+
+        if (savedRooms.length === 0) {
+            roomList.innerHTML = '<p style="text-align:center; color:#fff;">No saved rooms yet.</p>';
+        } else {
+            savedRooms.forEach(room => {
+                const roomState = JSON.parse(localStorage.getItem('room_' + room.id));
+
+                if (roomState) {
+                    const card = document.createElement('div');
+                    card.className = 'room-card';
+
+                    // Main click (only triggers if not clicking the delete button)
+                    card.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('delete-btn')) {
+                            window.location.href = `free-ipad.html?room=${room.id}`;
+                        }
+                    });
+
+                    // Room name
+                    const name = document.createElement('div');
+                    name.className = 'room-name';
+                    name.textContent = roomState.roomName || 'Untitled Room';
+
+                    // Room details
+                    const dimensions = `${roomState.roomWidth} × ${roomState.roomHeight} ${roomState.unit || 'cm'}`;
+                    const date = new Date(room.date).toLocaleString();
+
+                    const meta = document.createElement('div');
+                    meta.className = 'room-meta';
+                    meta.textContent = `Size: ${dimensions}  •  Saved: ${date}`;
+
+                    // 🗑 Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'X';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.title = 'Delete Room';
+                    deleteBtn.style.position = 'absolute';
+                    deleteBtn.style.top = '8px';
+                    deleteBtn.style.right = '12px';
+                    deleteBtn.style.border = 'none';
+                    deleteBtn.style.background = 'transparent';
+                    deleteBtn.style.cursor = 'pointer';
+                    deleteBtn.style.fontSize = '18px';
+                    deleteBtn.style.color = '#c65818';
+
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // prevent triggering the card click
+                        const confirmDelete = confirm(`Delete "${roomState.roomName}"?`);
+                        if (!confirmDelete) return;
+
+                        // Remove from localStorage
+                        localStorage.removeItem(`room_${room.id}`);
+
+                        // Remove from savedRooms list
+                        const updated = savedRooms.filter(r => r.id !== room.id);
+                        localStorage.setItem('savedRooms', JSON.stringify(updated));
+
+                        // Remove from DOM
+                        card.remove();
+
+                        // Optional: show "no rooms" message if list is now empty
+                        if (updated.length === 0) {
+                            roomList.innerHTML = '<p style="text-align:center; color:#fff;">No saved rooms yet.</p>';
+                        }
+                    });
+
+                    // Style container for positioning delete button
+                    card.style.position = 'relative';
+
+                    // Assemble
+                    card.appendChild(deleteBtn);
+                    card.appendChild(name);
+                    card.appendChild(meta);
+                    roomList.appendChild(card);
+
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
+
